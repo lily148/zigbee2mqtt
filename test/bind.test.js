@@ -6,7 +6,7 @@ const settings = require('../lib/util/settings');
 const Controller = require('../lib/controller');
 const flushPromises = () => new Promise(setImmediate);
 
-describe('Device bind', () => {
+describe('Bind', () => {
     let controller;
 
     mockClear = (device) => {
@@ -30,11 +30,8 @@ describe('Device bind', () => {
         MQTT.publish.mockClear();
     });
 
-    it('Should subscribe to nested topics', async () => {
-        expect(MQTT.subscribe).toHaveBeenCalledWith('zigbee2mqtt/bridge/bind/+');
-        expect(MQTT.subscribe).toHaveBeenCalledWith('zigbee2mqtt/bridge/bind/+/+');
-        expect(MQTT.subscribe).toHaveBeenCalledWith('zigbee2mqtt/bridge/bind/+/+/+');
-        expect(MQTT.subscribe).toHaveBeenCalledWith('zigbee2mqtt/bridge/bind/+/+/+/+/+');
+    it('Should subscribe to topics', async () => {
+        expect(MQTT.subscribe).toHaveBeenCalledWith('zigbee2mqtt/bridge/bind/#');
     });
 
     it('Should bind', async () => {
@@ -55,6 +52,17 @@ describe('Device bind', () => {
         expect(JSON.parse(MQTT.publish.mock.calls[1][1])).toStrictEqual({type: 'device_bind', message: {from: 'remote', to: 'bulb_color', cluster: 'genOnOff'}});
         expect(MQTT.publish.mock.calls[2][0]).toStrictEqual('zigbee2mqtt/bridge/log');
         expect(JSON.parse(MQTT.publish.mock.calls[2][1])).toStrictEqual({type: 'device_bind', message: {from: 'remote', to: 'bulb_color', cluster: 'genLevelCtrl'}});
+    });
+
+    it('Should log error when there is nothing to bind', async () => {
+        const device = zigbeeHerdsman.devices.bulb_color;
+        const endpoint = device.getEndpoint(1);
+        mockClear(device);
+        logger.error.mockClear();
+        MQTT.events.message('zigbee2mqtt/bridge/bind/remote', 'button');
+        await flushPromises();
+        expect(endpoint.bind).toHaveBeenCalledTimes(0);
+        expect(logger.error).toHaveBeenCalledWith(`Nothing to bind from 'remote' to 'button'`);
     });
 
     it('Should unbind', async () => {

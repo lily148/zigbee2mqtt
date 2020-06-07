@@ -147,6 +147,12 @@ function writeDefaultConfiguration() {
             },
             '0x0017880104e45526': {
                 friendly_name: 'GL-S-007ZS',
+            },
+            '0x0017880104e43559': {
+                friendly_name: 'U202DST600ZB'
+            },
+            '0x0017880104e44559': {
+                friendly_name: '3157100_thermostat',
             }
         },
         groups: {
@@ -208,6 +214,7 @@ writeDefaultState();
 
 module.exports = {
     mockDir,
+    read: () => yaml.read(path.join(mockDir, 'configuration.yaml')),
     writeDefaultConfiguration,
     writeDefaultState,
     removeState,
